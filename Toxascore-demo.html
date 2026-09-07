@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>toxa</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M4 4 H44.32 L60 19.68 V60 H4 Z' fill='%23EFECE4'/%3E%3Ccircle cx='29.76' cy='36.48' r='12.32' fill='%2312110F'/%3E%3Ccircle cx='29.76' cy='36.48' r='10.92' fill='%23EFECE4'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<meta name="theme-color" content="#0c0c0b" />
+<style>
+:root{--ink:#12110F;--bone:#EFECE4;--field:#F7F5F0;--line:#C9C3B6;--proof:#215E45;--rust:#8A3B2A;--font-sans:'IBM Plex Sans',ui-sans-serif,system-ui,sans-serif;--font-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;--page-max-width:1200px;--card-padding:32px}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--field);color:var(--ink);font-family:var(--font-sans);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:0;color:inherit;background:none}button:focus-visible{outline:1px solid var(--ink);outline-offset:3px}
+.app{min-height:100vh;background:var(--field)}
+.brand-lockup{display:inline-flex;align-items:center;gap:10px;padding:4px 0;color:inherit}
+.brand-lockup img,.brand-lockup svg{width:32px;height:32px;display:block}
+.wordmark{font-size:22px;font-weight:500;letter-spacing:-.02em;line-height:1}
+.landing{position:relative;min-height:100dvh;background:#0c0c0b;color:var(--bone);overflow:hidden}
+.landing-field{position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 80% 70% at 72% 38%,rgba(48,47,44,.55),transparent 58%),radial-gradient(ellipse 90% 80% at 18% 8%,rgba(38,37,34,.4),transparent 50%),linear-gradient(180deg,#141412 0%,#0b0b0a 52%,#080807 100%)}
+.landing-comb{position:absolute;inset:-80px;opacity:.72;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='46.765' height='81' viewBox='0 0 46.765 81'%3E%3Cg fill='none' stroke='%239a958a' stroke-width='0.9'%3E%3Cpath d='M23.383 0 L46.765 13.5 V40.5 L23.383 54 L0 40.5 V13.5 Z'/%3E%3Cpath d='M0 40.5 L23.383 54 V81 L0 94.5 L-23.383 81 V54 Z'/%3E%3Cpath d='M46.765 40.5 L70.148 54 V81 L46.765 94.5 L23.383 81 V54 Z'/%3E%3C/g%3E%3C/svg%3E");background-size:46.765px 81px;-webkit-mask-image:radial-gradient(ellipse 80% 90% at 78% 40%,#000 0%,#000 32%,transparent 70%);mask-image:radial-gradient(ellipse 80% 90% at 78% 40%,#000 0%,#000 32%,transparent 70%)}
+.landing-sheen{position:absolute;inset:0;background:linear-gradient(115deg,rgba(0,0,0,.25) 0%,transparent 42%,rgba(255,255,255,.025) 58%,transparent 72%),radial-gradient(ellipse 50% 40% at 78% 30%,rgba(255,255,255,.04),transparent 70%)}
+.landing-nav{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1280px;margin:0 auto;padding:28px 48px 0;min-height:72px}
+.landing-nav-end{display:flex;align-items:center;gap:8px}
+.landing-link{color:var(--bone);padding:10px 14px;font-size:14px}
+.landing-hero{position:relative;z-index:2;min-height:calc(100dvh - 72px);display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.7fr);gap:48px;align-items:center;padding:72px 48px 64px;width:100%;max-width:1280px;margin:0 auto;min-width:0}
+.landing-copy{min-width:0}
+.landing-stage{min-height:280px}
+.landing-title{font-family:'IBM Plex Serif',Georgia,serif;font-weight:400;font-size:clamp(44px,5.6vw,72px);line-height:1.05;letter-spacing:-.03em;margin:0;color:#f3f0e8}
+.landing-sub{font-size:16px;color:#c9c4b8;max-width:28em;margin:22px 0 0}
+.btn-landing{background:var(--bone);color:var(--ink);padding:10px 16px;font-size:14px;font-weight:500;border-radius:2px;display:inline-flex;align-items:center;gap:8px;margin-top:36px}
+.landing-nav .btn-landing{margin-top:0}
+.btn-landing:hover{background:#fff}
+.btn-primary.is-loading,.btn-ghost.is-loading,.btn-landing.is-loading{opacity:1;cursor:wait}
+.tx-loader{display:inline-flex;align-items:center;justify-content:center;min-height:1.2em}
+.tx-loader-grid{display:grid;grid-template-columns:repeat(3,4px);gap:1.5px;flex-shrink:0}
+.tx-loader-cell{width:4px;height:4px;border-radius:1px;background:currentColor;opacity:.15}
+.tx-loader-cell.wave{animation:pixel-on 650ms ease-in-out var(--pixel-delay,0ms) infinite}
+.wide .tx-loader{width:100%}
+@keyframes pixel-on{0%,100%{opacity:.15}50%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.tx-loader-cell.wave{animation:none;opacity:.15}}
+.landing-card{background:var(--bone);color:var(--ink);padding:32px}
+.landing-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.landing-card .label{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.62}
+.landing-card .big{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:clamp(64px,8vw,88px);line-height:.95;letter-spacing:-.04em;margin:4px 0 18px}
+.landing-card-meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.unverified{color:var(--rust)}.verified-state{color:var(--proof)}
+.topnav{position:sticky;top:0;z-index:20;background:var(--ink);color:var(--bone)}
+.topnav-inner{display:flex;align-items:center;gap:12px;min-height:64px;max-width:var(--page-max-width);margin:0 auto;padding:8px 24px}
+.nav-links{display:flex;gap:4px;flex:1;justify-content:center}
+.nav-ghost{color:var(--line);padding:9px 12px;font-size:14px}
+.nav-ghost.active{color:var(--bone);box-shadow:inset 0 -2px 0 var(--bone)}
+.nav-end{display:flex;align-items:center;gap:8px}
+.mode-pills{display:flex;border:1px solid rgba(239,236,228,.22);padding:2px}
+.mode-pills button{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--line);padding:8px 12px}
+.mode-pills button.on{background:var(--bone);color:var(--ink)}
+.btn-primary{background:var(--ink);color:var(--bone);padding:12px 18px;font-size:16px;font-weight:600;display:inline-flex;align-items:center}
+.topnav .btn-primary{background:var(--bone);color:var(--ink)}
+.btn-ghost{background:transparent;border:1px solid var(--ink);color:var(--ink);padding:12px 18px;font-size:16px;display:inline-flex}
+.topnav .btn-ghost{border-color:var(--bone);color:var(--bone)}
+.shell{max-width:var(--page-max-width);margin:0 auto;padding:0 24px 120px}
+.desk-page{padding-top:28px}
+.desk-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:28px}
+.desk-title{font-weight:500;font-size:38px;line-height:.95;letter-spacing:-.02em;margin:8px 0 0}
+.desk-head-actions{display:flex;gap:10px;flex-wrap:wrap}
+.chip{display:inline-flex;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.62;margin-bottom:12px}
+.tile{background:var(--ink);color:var(--bone);padding:32px;display:flex;flex-direction:column;align-items:flex-start;text-align:left}
+.tile h3{font-weight:500;font-size:32px;line-height:1.05;margin:8px 0 12px}
+.tile p{font-size:16px;margin:0;opacity:.86}
+.tile-mark{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.62}
+.product-band{background:var(--bone);border:1px solid var(--line);padding:36px 32px}
+.band-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:24px}
+.band-head h2{font-weight:500;font-size:32px;line-height:1.05;margin:0}
+.band-link{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.62}
+.positions{display:grid}
+.position{display:grid;grid-template-columns:1fr auto auto auto;gap:24px;align-items:center;padding:20px 0;border-bottom:1px solid var(--line)}
+.position:last-child{border-bottom:0}
+.pos-title{font-size:18px;display:flex;gap:10px;align-items:center}
+.pos-sub{font-size:14px;opacity:.62;margin-top:4px}
+.pos-num,.pos-metric{text-align:right}
+.pos-num b,.pos-metric b{display:block;font-family:var(--font-mono);font-size:16px;font-variant-numeric:tabular-nums}
+.pos-num span,.pos-metric span{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.5}
+.verified{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--proof)}
+.data-signal{font-family:var(--font-mono);font-size:12px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--proof)}
+.desk{display:grid;grid-template-columns:1.15fr .85fr;gap:12px;padding-top:8px}
+.desk-side{display:grid;gap:12px}
+.metric{background:var(--bone);border:1px solid var(--line);padding:32px}
+.metric .label{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.62;display:block;margin-bottom:12px}
+.metric strong{display:block;font-family:var(--font-mono);font-weight:400;font-variant-numeric:tabular-nums;font-size:32px;line-height:.9;margin-bottom:8px}
+.metric span:last-child{font-size:14px;opacity:.62}
+.desk-cta{padding:24px}.desk-cta h3{font-size:28px}
+.ladder{margin:8px 0 24px}
+.ladder-top{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.ladder-track{height:2px;background:var(--line);overflow:hidden}
+.ladder-track i{display:block;height:100%;background:var(--ink)}
+.ladder-track i.up{background:var(--proof)}
+.ladder-marks{display:flex;justify-content:space-between;margin-top:8px;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;opacity:.5}
+.score-invert{background:var(--bone);color:var(--ink);border:1px solid var(--line);padding:32px;text-align:left}
+.score-invert .landing-card-head{margin-bottom:8px}.score-invert .label{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.62}.score-invert .verified-state,.score-invert .unverified{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.score-invert .big{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:72px;line-height:.95;letter-spacing:-.04em;margin:8px 0 6px}
+.score-invert p{font-size:16px;margin:0 0 16px;opacity:.72}
+.page-hero{text-align:left;padding:36px 0 28px}
+.page-hero h1{font-weight:500;font-size:40px;line-height:1.05;letter-spacing:-.02em;margin:8px 0 12px;text-wrap:balance}
+.page-hero p{font-size:18px;opacity:.72;max-width:40em;margin:0}
+.steps{display:flex;gap:24px;flex-wrap:wrap;margin:0 0 40px}
+.step{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.45;display:flex;align-items:center;gap:8px}
+.step.current,.step.done{opacity:1}.step.done{color:var(--proof)}
+.step i{width:18px;height:18px;border:1px solid var(--line);display:grid;place-items:center;font-style:normal;font-size:9px}
+.panel{background:var(--bone);border:1px solid var(--line);padding:32px;max-width:720px}
+.panel-head{display:flex;justify-content:space-between;align-items:start;gap:16px;margin-bottom:24px}
+.panel-head h2{font-weight:500;font-size:32px;line-height:1.05;margin:8px 0 0}
+.pill{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);padding:8px 12px;white-space:nowrap}
+.pill.proof{color:var(--proof);border-color:var(--proof)}
+.collateral{display:flex;justify-content:space-between;align-items:center;padding:20px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:20px}
+.collateral b{display:block;font-family:var(--font-mono);font-size:16px;font-variant-numeric:tabular-nums}
+.collateral span{font-size:14px;opacity:.62}
+.progress{height:1px;background:var(--line);margin:8px 0 24px}
+.progress span{display:block;height:100%;background:var(--proof)}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.readout span{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.5;display:block;margin-bottom:6px}
+.readout b{font-family:var(--font-mono);font-size:12px;font-variant-numeric:tabular-nums}
+.disclaimer{font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;opacity:.5;text-align:center;margin-top:18px}
+.wide{width:100%;justify-content:center}
+.doc-card{background:var(--bone);border:1px solid var(--line);padding:32px;margin-bottom:12px}
+.doc-card h3{font-weight:500;font-size:28px;line-height:1.1;margin:0 0 16px}
+.doc-card p{font-size:16px;opacity:.78;margin:0}
+.foot{max-width:var(--page-max-width);margin:80px auto 0;padding:0 24px 48px;display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.5}
+.section{padding-top:28px}
+@media(max-width:900px){.landing-hero{grid-template-columns:1fr;gap:32px;padding:56px 22px 48px}.landing-nav{padding:20px 22px 0}.landing-stage{display:none}.page-hero h1{font-size:32px}.desk{grid-template-columns:1fr}.desk-head{flex-direction:column;align-items:flex-start}.nav-links{order:3;width:100%}.topnav-inner{flex-wrap:wrap;height:auto}.position{grid-template-columns:1fr auto}.pos-metric{display:none}.product-band{padding:32px 24px}.readout{grid-template-columns:1fr 1fr}.score-invert .big,.landing-card .big{font-size:56px}}
+@media(max-width:650px){.landing-nav{padding:16px 18px 0;min-height:64px}.landing-nav .btn-landing{display:none}.landing-title{font-size:36px}.landing-hero{padding:48px 18px}.landing-sub{font-size:15px}.landing-copy .btn-landing{margin-top:28px}.landing-card{padding:24px}.landing-card-meta{flex-direction:column;align-items:flex-start;gap:6px}}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+const STARTING=700, BASE=6000, MAX=8000, PER=10, REPAY=15;
+const ltvBps=s=>Math.min(MAX, BASE+Math.max(0,s-STARTING)*PER);
+const fmtLtv=b=>(b/100).toFixed(1)+'%';
+const COLLAT=0.01;
+const DEMO_MS=2400;
+const PIXEL_DELAYS=Array.from({length:9},(_,i)=>{const r=Math.floor(i/3),c=i%3;return (c+Math.abs(r-1))*90});
+const state={entered:false, view:'overview', wallet:false, stage:0, loan:false, score:STARTING, busy:false, busyLabel:'Working'};
+function loaderHTML(label){
+  const cells=PIXEL_DELAYS.map(d=>`<span class="tx-loader-cell wave" style="--pixel-delay:${d}ms"></span>`).join('');
+  return `<span class="tx-loader" role="status" aria-label="${label}"><span class="tx-loader-grid" aria-hidden="true">${cells}</span></span>`;
+}
+function runBusy(label, then){
+  if(state.busy) return;
+  state.busy=true;
+  state.busyLabel=label;
+  render();
+  setTimeout(()=>{
+    state.busy=false;
+    then();
+  }, DEMO_MS);
+}
+try{
+  if(/[?&]desk=1/.test(location.search)) state.entered=true;
+  else state.entered=sessionStorage.getItem('toxa-entered')==='1';
+}catch(e){}
+function enterApp(view){
+  state.entered=true;
+  if(view) state.view=view;
+  try{sessionStorage.setItem('toxa-entered','1');}catch(e){}
+  render();
+}
+const TICKET=`<svg width="28" height="28" viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M4 4 H44.32 L60 19.68 V60 H4 Z" fill="#EFECE4"/><circle cx="29.76" cy="36.48" r="12.32" fill="#12110F"/><circle cx="29.76" cy="36.48" r="10.92" fill="#EFECE4"/><path fill="#12110F" d="M30.5 42.76h-1.24v-1.81l.1-.2V32.21l-.1-.2v-1.81h1.24v1.81l-.09.2v8.53l.09.2zm-.73-1.22q-.86 0-1.56-.23-.71-.22-1.23-.61-.53-.38-.89-.83l1.06-.96q.31.38.71.68.4.31.9.49.51.18 1.1.18.67 0 1.13-.22.46-.22.69-.57.23-.36.23-.81 0-.38-.14-.67-.15-.29-.5-.5-.35-.21-.94-.33l-.86-.17q-1.09-.24-1.77-.61-.67-.38-.99-.93-.31-.54-.31-1.29 0-.78.39-1.4.4-.61 1.19-.96.79-.36 1.99-.36 1.19 0 2.02.44.83.43 1.34 1.1l-1.08.89q-.32-.42-.92-.79-.59-.36-1.45-.36-1.02 0-1.49.4-.48.4-.48.97 0 .42.18.7.17.29.53.46.36.18.87.29l.94.22q1.05.23 1.71.6.66.36.98.89.32.53.32 1.3 0 .83-.43 1.52-.43.68-1.24 1.07-.82.4-2 .4z"/></svg>`;
+function lockup(){
+  return `<span class="brand-lockup">${TICKET}<span class="wordmark">toxa</span></span>`;
+}
+function landing(){
+  return `<div class="landing">
+    <div class="landing-field" aria-hidden="true"><div class="landing-comb"></div><div class="landing-sheen"></div></div>
+    <header class="landing-nav">
+      ${lockup()}
+      <div class="landing-nav-end">
+        <button class="landing-link" onclick="enterApp('docs')">Docs</button>
+        <button class="btn-landing${state.busy?' is-loading':''}" onclick="enterDesk()" ${state.busy?'disabled':''}>${state.busy?loaderHTML('Opening'):'Enter the desk <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 9 L9 3 M5 3 H9 V7"/></svg>'}</button>
+      </div>
+    </header>
+    <main class="landing-hero">
+      <div class="landing-copy">
+        <h1 class="landing-title">Lock once.<br>Borrow better.<br>Score everywhere.</h1>
+        <p class="landing-sub">Lock ETH on Sepolia. Prove it on Creditcoin.</p>
+        <button class="btn-landing${state.busy?' is-loading':''}" onclick="enterDesk()" ${state.busy?'disabled':''}>${state.busy?loaderHTML('Opening'):'Enter the desk'}</button>
+      </div>
+      <div class="landing-stage" aria-hidden="true"></div>
+    </main>
+  </div>`;
+}
+function ladder(score){
+  const now=ltvBps(score), next=ltvBps(score+REPAY);
+  const pct=Math.max(4, ((now-BASE)/(MAX-BASE))*100);
+  const up=score>STARTING;
+  return `<div class="ladder"><div class="ladder-top"><span>Term sheet</span><b class="${up?'data-signal':''}">${fmtLtv(now)} LTV</b></div><div class="ladder-track"><i class="${up?'up':''}" style="width:${pct}%"></i></div><div class="ladder-marks"><span>60% at 700</span><span>Next repay → ${fmtLtv(next)}</span><span>80% cap</span></div></div>`;
+}
+function go(v){if(state.busy) return; state.view=v; render();}
+function enterDesk(){runBusy('Opening',()=>enterApp());}
+function start(){if(state.busy) return; state.wallet=true; state.view='borrow'; state.stage=0; render();}
+function getStarted(){runBusy('Starting',()=>{state.wallet=true; state.view='borrow'; state.stage=0; render();});}
+function advance(){
+  const label=state.stage===0?'Locking':state.stage<3?'Proving':'Issuing';
+  runBusy(label,()=>{
+    if(state.stage<3){state.stage++; render(); return;}
+    state.loan=true; state.score+=5; state.view='overview'; state.stage=0; render();
+  });
+}
+function nav(){
+  const items=[['overview','Portfolio'],['borrow','Borrow'],['score','Score'],['activity','Activity'],['docs','Docs']];
+  return `<div class="topnav"><div class="topnav-inner">
+    <button class="brand-lockup" onclick="go('overview')" aria-label="toxa home">${TICKET}<span class="wordmark">toxa</span></button>
+    <nav class="nav-links">${items.map(([id,l])=>`<button class="nav-ghost${state.view===id?' active':''}" onclick="go('${id}')">${l}</button>`).join('')}</nav>
+    <div class="nav-end">
+      <div class="mode-pills"><button class="on">Demo</button><button disabled>Live</button></div>
+      ${state.wallet
+        ? `<button class="btn-ghost">0x71f9…4C2A</button>`
+        : `<button class="btn-primary${state.busy?' is-loading':''}" onclick="getStarted()" ${state.busy?'disabled':''}>${state.busy?loaderHTML('Starting'):'Get started →'}</button>`}
+    </div></div></div>`;
+}
+function overview(){
+  const bps=ltvBps(state.score);
+  const ltv=fmtLtv(bps);
+  const borrowed=state.loan?COLLAT*(ltvBps(STARTING)/10000):0;
+  const line=COLLAT*(bps/10000);
+  const avail=Math.max(0, line-borrowed);
+  return `<div class="shell desk-page">
+    <div class="desk-head">
+      <div><div class="chip">Line</div><h1 class="desk-title">Portfolio</h1></div>
+      <div class="desk-head-actions"><button class="btn-primary" onclick="start()">New loan →</button></div>
+    </div>
+    <section class="desk">
+      <div class="score-invert">
+        <div class="landing-card-head"><span class="label">Score</span><span class="${state.loan?'verified-state':'unverified'}">${state.loan?'Verified':'Unverified · Demo'}</span></div>
+        <div class="big">${state.score}</div>
+        <p>of 850. Score sets LTV on the next lock.</p>
+        ${ladder(state.score)}
+        <button class="btn-primary" onclick="go('score')">Score detail →</button>
+      </div>
+      <div class="desk-side">
+        <div class="metric"><span class="label">Borrowed</span><strong>${borrowed.toFixed(4)} tCTC</strong><span>1:1 against locked ETH</span></div>
+        <div class="metric"><span class="label">Available</span><strong>${avail.toFixed(4)} tCTC</strong><span>${ltv} from this score</span></div>
+        <button class="tile dusk desk-cta" onclick="start()"><span class="tile-mark">Originate</span><h3>New loan</h3><p>Lock ETH on Sepolia. Attestcoin proves it. Creditcoin sizes the line.</p></button>
+      </div>
+    </section>
+    <section class="section"><div class="product-band">
+      <div class="band-head"><h2>Active positions</h2><button class="band-link" onclick="go('activity')">View activity →</button></div>
+      <div class="positions">
+        <div class="position"><div><div class="pos-title">ETH <span class="${state.loan?'verified':'unverified'}">${state.loan?'Verified':'Unverified'}</span></div><div class="pos-sub">Ethereum, Sepolia</div></div><div class="pos-num"><span>Amount</span><b>${COLLAT.toFixed(4)} ETH</b></div><div class="pos-metric"><span>LTV</span><b>${ltv}</b></div><div class="pos-metric"><span>Status</span><b>${state.loan?'Open':'Locked'}</b></div></div>
+      </div>
+    </div></section></div>`;
+}
+function borrow(){
+  const steps=['Lock collateral','Generate proof','Verify on Creditcoin','Loan issued'];
+  const done=state.stage>=3;
+  const labels=['Lock collateral','Continue verification','Continue verification','Issue loan on Creditcoin'];
+  return `<div class="shell"><div class="page-hero">
+    <div class="chip">Origination</div>
+    <h1>Verify the lock.</h1>
+    <p>A credit line secured by a proved lock. This score sets LTV at ${fmtLtv(ltvBps(state.score))}.</p>
+  </div>
+  <div class="steps">${steps.map((s,i)=>`<div class="step ${i===state.stage?'current':''} ${i<state.stage?'done':''}"><i>${i<state.stage?'✓':'0'+(i+1)}</i>${s}</div>`).join('')}</div>
+  <div class="panel">
+    <div class="panel-head"><div><span class="chip" style="margin:0">Sepolia collateral</span><h2>${done?'Proof verified':(state.stage===0?'Ready to verify':'Attestation in progress')}</h2></div><span class="pill${done?' proof':''}">${done?'Proof verified':'In progress'}</span></div>
+    <div class="collateral"><div><b>${COLLAT} ETH</b><span>Ethereum, Sepolia</span></div><strong>1:1 tCTC</strong></div>
+    <div class="progress"><span style="width:${Math.min(100,25+state.stage*25)}%"></span></div>
+    ${ladder(state.score)}
+    <div class="readout">
+      <div><span>Chain</span><b>Sepolia</b></div>
+      <div><span>Chain key</span><b>1</b></div>
+      <div><span>Continuity</span><b class="${state.stage>1?'data-signal':''}">${state.stage>1?'Ready':'Pending'}</b></div>
+      <div><span>Timing</span><b>~2s per step</b></div>
+    </div>
+    <button class="btn-primary wide${state.busy?' is-loading':''}" onclick="advance()" ${state.busy?'disabled':''}>${state.busy?loaderHTML(state.busyLabel):labels[state.stage]+' →'}</button>
+    <div class="disclaimer">Demo path is simulated. Live wiring uses the Attestcoin Protocol</div>
+  </div></div>`;
+}
+function scoreView(){
+  const factors=[['Repayment history','Every proven repayment on record','40%'],['Collateral quality','Verified lock, not a self-report','25%'],['Credit age','Time since first verified lock','20%'],['Utilization','Borrowed versus available credit','15%']];
+  return `<div class="shell"><div class="page-hero"><div class="chip">Term sheet</div><h1>Score is the LTV.</h1><p>60% at 700. Ten basis points per point. Eighty percent is the cap. Lock +5, repay +15.</p></div>
+  <div class="desk">
+    <div class="score-invert"><span class="label">Score</span><div class="big">${state.score}</div><p>Current LTV ${fmtLtv(ltvBps(state.score))}.</p>${ladder(state.score)}<button class="btn-primary" onclick="start()">Start a new loan →</button></div>
+    <div class="product-band"><div class="band-head"><h2>Weights</h2></div><div class="positions">${factors.map(([a,b,c])=>`<div class="position"><div><div class="pos-title">${a}</div><div class="pos-sub">${b}</div></div><div class="pos-metric"><span>Weight</span><b>${c}</b></div></div>`).join('')}</div></div>
+  </div></div>`;
+}
+function activity(){
+  const rows=state.loan?[
+    ['Collateral locked',COLLAT+' ETH, Sepolia','Just now'],
+    ['Proof generated','Merkle + Continuity payload','12s ago'],
+    ['Loan issued','0.006 tCTC at 60% LTV','18s ago'],
+    ['Score updated','700 to 705','19s ago']
+  ]:[
+    ['Collateral locked',COLLAT+' ETH, Sepolia','Just now'],
+    ['Proof generated','Merkle + Continuity payload','12s ago']
+  ];
+  return `<div class="shell"><div class="page-hero"><div class="chip">Activity</div><h1>Verified history.</h1><p>Every row is a proof, not a promise.</p></div>
+  <div class="product-band"><div class="positions">${rows.map(r=>`<div class="position"><div><div class="pos-title">${r[0]} <span class="verified">Verified</span></div><div class="pos-sub">${r[1]}</div></div><div class="pos-metric"><span>When</span><b>${r[2]}</b></div></div>`).join('')}</div></div></div>`;
+}
+function docs(){
+  const items=[
+    ['How it works','Lock ETH on Sepolia. Attestcoin proves the lock. Toxa.execute on Creditcoin verifies via BlockProver 0x0FD2, then sizes the loan from your LTV. A repay raises the score, so the next lock borrows more against the same collateral.'],
+    ['What execute requires','ASCBase: Merkle inclusion and continuity at 0x0FD2, replay protection. Then Toxa: receipt.status == 1, Locked emitter == registered locker, tx.from == lock.user. This HTML file is Demo only.'],
+    ['Score mechanics','Scores start at 700. A verified lock adds 5. A repayment adds 15. LTV starts at 60% and rises 10 bps per score point, capped at 80%.'],
+    ['Honest limits','Sepolia unlockETH is not gated by Creditcoin repay. FX is 1:1. Score is per-address. Toxa prices locked capital. It is not a FICO for the world.'],
+    ['This file','Standalone demo. No wallet, no network. For the full repo, open the zip and run npm install && npm run dev.'],
+    ['Live proofs','Lock 0x57d916f64337fd26fa6b867b83414dc86a754b78280c00406c0b34ea789a4724. Execute 0x1087519dc6ee4ea4003e4950b0a38f9e0be72fa2ab90fb2ff8a7430490517088. Repay 0x880cc66a02fd3887163b5f8affe111309c05be330047d34103cd444dd7d4c302. Second lock 0x787ce03e577622fde1eef1bc060a0e6c0282ba95f5fac803dd1e0d952ba0474a. Loan #2 0x0d745dc6c8abf8bfba41c04a1aa9731daba731752d042ac6aac81bdef8c4affd.']
+  ];
+  return `<div class="shell"><div class="page-hero"><div class="chip">Docs</div><h1>How the desk is built.</h1><p>This HTML is the click-through. The zip is the product.</p></div>
+  ${items.map(([t,b])=>`<div class="doc-card"><h3>${t}</h3><p>${b}</p></div>`).join('')}</div>`;
+}
+function render(){
+  if(!state.entered){
+    document.getElementById('app').innerHTML=landing();
+    return;
+  }
+  const pages={overview,borrow,score:scoreView,activity,docs};
+  document.getElementById('app').innerHTML=nav()+(pages[state.view]||overview)()+`<footer class="foot"><span>Creditcoin testnet</span><span>Attestcoin protocol · demo file</span></footer>`;
+}
+render();
+</script>
+</body>
+</html>

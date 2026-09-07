@@ -1,0 +1,16 @@
+node_modules/
+dist/
+out/
+cache/
+broadcast/
+.vercel
+.grok/
+design/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+*:Zone.Identifier
+DESIGN_BRIEF.md
