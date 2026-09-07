@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { createRoot } from 'react-dom/client';
+import { createRoot, createPortal } from 'react-dom/client';
 import { ArrowUpRight, Check, Copy, X } from 'lucide-react';
 import '@fontsource/ibm-plex-sans/300.css';
 import '@fontsource/ibm-plex-sans/400.css';
@@ -142,6 +142,19 @@ function Nav({ active, onTab, onLogo, addr, copied, onCopy, onConnect, connectin
   const accountBtn = addr
     ? <button className="wallet" onClick={() => { setOpen(false); onCopy(); }} aria-label="Copy wallet address"><span className="dot" />{copied ? 'COPIED' : trunc(addr, 6)}<Copy size={14} /></button>
     : <button className="btn bone sm" onClick={() => { setOpen(false); onConnect(); }} disabled={connecting}>{connecting ? <CubeLoader label="Connecting" /> : 'Connect wallet'}</button>;
+  const menu = (
+    <>
+      <button type="button" className={'nav-scrim' + (open ? ' is-open' : '')} tabIndex={open ? 0 : -1} aria-label="Close menu" onClick={() => setOpen(false)} />
+      <aside id="site-menu" className={'nav-drawer' + (open ? ' is-open' : '')} aria-hidden={!open}>
+        <nav className="drawer-links" aria-label="Menu">
+          {NAV.map(([id, label]) => (
+            <button key={id} className={'drawer-link' + (active === id ? ' active' : '')} onClick={() => pick(id)}>{label}</button>
+          ))}
+        </nav>
+        <div className="drawer-foot">{accountBtn}</div>
+      </aside>
+    </>
+  );
   return (
     <header className={'nav' + (open ? ' is-open' : '')}>
       <div className="nav-bar">
@@ -154,15 +167,7 @@ function Nav({ active, onTab, onLogo, addr, copied, onCopy, onConnect, connectin
           {open ? <X size={22} strokeWidth={1.75} /> : <span className="menu-bars" aria-hidden="true"><i /><i /><i /></span>}
         </button>
       </div>
-      <button type="button" className="nav-scrim" tabIndex={open ? 0 : -1} aria-label="Close menu" onClick={() => setOpen(false)} />
-      <aside id="site-menu" className="nav-drawer" aria-hidden={!open}>
-        <nav className="drawer-links" aria-label="Menu">
-          {NAV.map(([id, label]) => (
-            <button key={id} className={'drawer-link' + (active === id ? ' active' : '')} onClick={() => pick(id)}>{label}</button>
-          ))}
-        </nav>
-        <div className="drawer-foot">{accountBtn}</div>
-      </aside>
+      {typeof document !== 'undefined' ? createPortal(menu, document.body) : menu}
     </header>
   );
 }
