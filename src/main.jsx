@@ -154,14 +154,15 @@ function Nav({ active, onTab, onLogo, addr, copied, onCopy, onConnect, connectin
           {open ? <X size={22} strokeWidth={1.75} /> : <span className="menu-bars" aria-hidden="true"><i /><i /><i /></span>}
         </button>
       </div>
-      <div id="site-menu" className="nav-drawer" hidden={!open}>
+      <button type="button" className="nav-scrim" tabIndex={open ? 0 : -1} aria-label="Close menu" onClick={() => setOpen(false)} />
+      <aside id="site-menu" className="nav-drawer" aria-hidden={!open}>
         <nav className="drawer-links" aria-label="Menu">
           {NAV.map(([id, label]) => (
             <button key={id} className={'drawer-link' + (active === id ? ' active' : '')} onClick={() => pick(id)}>{label}</button>
           ))}
         </nav>
         <div className="drawer-foot">{accountBtn}</div>
-      </div>
+      </aside>
     </header>
   );
 }
