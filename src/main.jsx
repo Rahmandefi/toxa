@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ArrowUpRight, Check, Copy } from 'lucide-react';
+import { ArrowUpRight, Check, Copy, X } from 'lucide-react';
 import '@fontsource/ibm-plex-sans/300.css';
 import '@fontsource/ibm-plex-sans/400.css';
 import '@fontsource/ibm-plex-sans/500.css';
@@ -54,7 +54,6 @@ function CubeLoader({ label = 'Working' }) {
 const NAV = [
   ['overview', 'Portfolio'], ['borrow', 'Borrow'], ['score', 'Score'], ['activity', 'Activity'], ['docs', 'Docs'],
 ];
-const TABS = [['overview', 'PORT'], ['borrow', 'BORROW'], ['score', 'SCORE'], ['activity', 'ACTIV'], ['docs', 'DOCS']];
 
 /* demo proof pipeline - an animated walkthrough of the real Attestcoin flow */
 const DEMO_PHASES = [
@@ -124,18 +123,46 @@ function LtvLadder({ score, variant = 'full' }) {
 
 /* ---------- shared nav ---------- */
 function Nav({ active, onTab, onLogo, addr, copied, onCopy, onConnect, connecting }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    const onResize = () => { if (window.innerWidth > 900) setOpen(false); };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('resize', onResize);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [open]);
+  const home = onLogo || (() => onTab('overview'));
+  const pick = (id) => { setOpen(false); onTab(id); };
+  const accountBtn = addr
+    ? <button className="wallet" onClick={() => { setOpen(false); onCopy(); }} aria-label="Copy wallet address"><span className="dot" />{copied ? 'COPIED' : trunc(addr, 6)}<Copy size={14} /></button>
+    : <button className="btn bone sm" onClick={() => { setOpen(false); onConnect(); }} disabled={connecting}>{connecting ? <CubeLoader label="Connecting" /> : 'Connect wallet'}</button>;
   return (
-    <div className="nav">
-      <div className="nav-left">
-        <button className="brand" onClick={onLogo || (() => onTab('overview'))} aria-label="toxa home"><img className="brand-mark" src="/brand/ticket-bone.svg" width="24" height="24" alt="" /><span className="brand-word">toxa</span></button>
-        <nav className="tabs">{NAV.map(([id, label]) => <button key={id} className={'tab' + (active === id ? ' active' : '')} onClick={() => onTab(id)}>{label}</button>)}</nav>
+    <header className={'nav' + (open ? ' is-open' : '')}>
+      <div className="nav-bar">
+        <div className="nav-left">
+          <button className="brand" onClick={() => { setOpen(false); home(); }} aria-label="toxa home"><img className="brand-mark" src="/brand/ticket-bone.svg" width="24" height="24" alt="" /><span className="brand-word">toxa</span></button>
+          <nav className="tabs" aria-label="Desk">{NAV.map(([id, label]) => <button key={id} className={'tab' + (active === id ? ' active' : '')} onClick={() => onTab(id)}>{label}</button>)}</nav>
+        </div>
+        <div className="nav-right">{accountBtn}</div>
+        <button type="button" className="menu-btn" aria-expanded={open} aria-controls="site-menu" aria-label={open ? 'Close menu' : 'Open menu'} onClick={() => setOpen((v) => !v)}>
+          {open ? <X size={22} strokeWidth={1.75} /> : <span className="menu-bars" aria-hidden="true"><i /><i /><i /></span>}
+        </button>
       </div>
-      <div className="nav-right">
-        {addr
-          ? <button className="wallet" onClick={onCopy} aria-label="Copy wallet address"><span className="dot" />{copied ? 'COPIED' : trunc(addr, 6)}<Copy size={14} /></button>
-          : <button className="btn bone sm" onClick={onConnect} disabled={connecting}>{connecting ? <CubeLoader label="Connecting" /> : 'Connect wallet'}</button>}
+      <div id="site-menu" className="nav-drawer" hidden={!open}>
+        <nav className="drawer-links" aria-label="Menu">
+          {NAV.map(([id, label]) => (
+            <button key={id} className={'drawer-link' + (active === id ? ' active' : '')} onClick={() => pick(id)}>{label}</button>
+          ))}
+        </nav>
+        <div className="drawer-foot">{accountBtn}</div>
       </div>
-    </div>
+    </header>
   );
 }
 function Rise({ className = '', children }) {
@@ -190,7 +217,7 @@ function Landing({ navProps, banner, onEnter, onDocs }) {
       <main>
         <div className="landing-hero">
           <div className="landing-copy">
-            <h1 className="landing-title reveal d1">Lock once. <b>Borrow better.</b> Score everywhere.</h1>
+            <h1 className="landing-title reveal d1"><span className="title-line">Lock once.</span> <span className="title-line"><b>Borrow better.</b></span> <span className="title-line">Score everywhere.</span></h1>
             <p className="landing-sub reveal d2">Lock ETH on Sepolia. Prove it on Creditcoin. The loan is issued because the lock was cryptographically proven, not because an oracle vouched for it.</p>
             <div className="landing-cta reveal d3">
               <button className="btn bone" onClick={goDesk} disabled={opening}>{opening ? <CubeLoader label="Opening" /> : <>Enter the desk <ArrowUpRight className="arrow" size={16} /></>}</button>
@@ -510,7 +537,6 @@ function App() {
         {view === 'docs' && <Docs />}
       </main>
       <Footer />
-      <nav className="bottom-nav">{TABS.map(([id, label]) => <button key={id} className={view === id ? 'active' : ''} onClick={() => setView(id)}>{label}</button>)}</nav>
     </div></div>
   );
 }
