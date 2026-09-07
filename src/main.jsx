@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { createRoot, createPortal } from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
+import { createPortal } from 'react-dom';
 import { ArrowUpRight, Check, Copy, X } from 'lucide-react';
 import '@fontsource/ibm-plex-sans/300.css';
 import '@fontsource/ibm-plex-sans/400.css';
