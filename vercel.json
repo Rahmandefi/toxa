@@ -7,8 +7,8 @@
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "functions": {
-    "api/prove.js": { "maxDuration": 300, "includeFiles": "{worker/**,src/lib/**}" },
-    "api/prove/[id].js": { "maxDuration": 30, "includeFiles": "{worker/**,src/lib/**}" },
+    "api/prove.js": { "maxDuration": 30, "includeFiles": "{worker/**,src/lib/**}" },
+    "api/prove/[id].js": { "maxDuration": 60, "includeFiles": "{worker/**,src/lib/**}" },
     "api/release.js": { "maxDuration": 30, "includeFiles": "{worker/**,src/lib/**}" },
     "api/health.js": { "maxDuration": 15, "includeFiles": "{worker/**,src/lib/**}" }
   }

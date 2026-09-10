@@ -12,7 +12,7 @@ import './styles.css';
 import { liveConfigured, explorerTx, CREDITCOIN_TESTNET_ID, SEPOLIA_ID } from './lib/chains.js';
 import {
   connectWallet, lockCollateral, startProofJob, pollProofJob, submitProof, fetchAccount, repayLoan,
-  quoteLoan, fetchCollateral, unlockCollateral,
+  quoteLoan, fetchCollateral, fetchLatestLockTx, unlockCollateral,
 } from './lib/live.js';
 
 /* ---------- constants ---------- */
@@ -356,7 +356,7 @@ function App() {
   const live = mode === 'live';
   const displayScore = live ? (liveAccount?.score ?? STARTING_SCORE) : score;
   const displayAddr = account; // real wallet only - no fake address in demo
-  const liveProving = live && ((stage > 0 && stage < 3) || busy);
+  const liveProving = live && busy && stage > 0 && stage < 3;
   const proving = view === 'borrow' && (demoRunning || liveProving);
 
   const enterApp = (nextView) => {
@@ -375,9 +375,31 @@ function App() {
     const [acct, collateral] = await Promise.allSettled([fetchAccount(addr), fetchCollateral(addr)]);
     if (acct.status === 'fulfilled') setLiveAccount(acct.value);
     else setError(acct.reason?.message || String(acct.reason));
-    if (collateral.status === 'fulfilled') setLiveCollateral(collateral.value);
+    if (collateral.status === 'fulfilled') {
+      setLiveCollateral(collateral.value);
+      if (Number(collateral.value?.locked || 0) > 0) {
+        const hash = await fetchLatestLockTx(addr).catch(() => '');
+        if (hash) setLockTx((cur) => cur || hash);
+      }
+    }
   };
   useEffect(() => { if (live && account) refreshLive(account); }, [live, account]);
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('toxa-lock-tx');
+      if (saved && /^0x[a-fA-F0-9]{64}$/.test(saved)) setLockTx(saved);
+    } catch { /* private mode */ }
+  }, []);
+  useEffect(() => {
+    try {
+      if (lockTx && lockTx !== LOCK_TX) sessionStorage.setItem('toxa-lock-tx', lockTx);
+    } catch { /* private mode */ }
+  }, [lockTx]);
+  useEffect(() => {
+    if (!live || stage !== 0 || busy || !lockTx) return;
+    if (Number(liveCollateral?.locked || 0) > 0) setStage(1);
+  }, [live, liveCollateral, lockTx, stage, busy]);
 
   useEffect(() => {
     if (!live || !account || !liveConfigured || view !== 'borrow') { setLiveQuote(null); return undefined; }
@@ -438,12 +460,27 @@ function App() {
 
   const pushActivity = (label, detail) => setActivity((r) => [{ id: Date.now(), label, detail, time: 'Just now' }, ...r].slice(0, 8));
 
+  const proveAndIssue = async (hash) => {
+    setStatus('Waiting for Creditcoin attestors, then building the Merkle + continuity proof.');
+    const jobId = await startProofJob(hash);
+    const proof = await pollProofJob(jobId, (s, detail) => setStatus(detail || s));
+    setStage(2); setStatus('Proof ready. Switch to Creditcoin Testnet and confirm loan issuance.');
+    const issued = await submitProof(account, proof);
+    setLoanTx(issued.hash); pushActivity('Proof verified', `Attestcoin execute · ${trunc(issued.hash)}`); setStage(3);
+    try { sessionStorage.removeItem('toxa-lock-tx'); } catch { /* private mode */ }
+    await refreshLive(account); pushActivity('Loan issued', `${liveAccount?.principal || ''} tCTC`); setStatus('Loan issued on Creditcoin.');
+  };
+
   const advanceLive = async () => {
     if (busy) return;
     setError('');
     if (!account) { await onConnect(); return; }
     setBusy(true);
     try {
+      if ((stage === 1 || stage === 2) && lockTx) {
+        await proveAndIssue(lockTx);
+        return;
+      }
       if (stage === 0) {
         setStatus('Checking the Creditcoin pool before anything is locked.');
         const quote = await quoteLoan(account, amount).catch(() => null);
@@ -457,13 +494,7 @@ function App() {
         setStatus('Switch to Sepolia and confirm the lock transaction.');
         const result = await lockCollateral(account, amount);
         setLockTx(result.hash); pushActivity('Collateral locked', `${amount} ETH · ${trunc(result.hash)}`); setStage(1);
-        setStatus('Waiting for Creditcoin attestors, then building the Merkle + continuity proof.');
-        const jobId = await startProofJob(result.hash);
-        const proof = await pollProofJob(jobId, (s, detail) => setStatus(detail || s));
-        setStage(2); setStatus('Proof ready. Switch to Creditcoin Testnet and confirm loan issuance.');
-        const issued = await submitProof(account, proof);
-        setLoanTx(issued.hash); pushActivity('Proof verified', `Attestcoin execute · ${trunc(issued.hash)}`); setStage(3);
-        await refreshLive(account); pushActivity('Loan issued', `${liveAccount?.principal || ''} tCTC`); setStatus('Loan issued on Creditcoin.');
+        await proveAndIssue(result.hash);
         return;
       }
       if (stage >= 3) { setView('overview'); setStage(0); setStatus(''); }
@@ -659,8 +690,8 @@ function Borrow({ live, onMode, liveConfigured, liveQuote, amount, setAmount, st
   const label = busy ? `Proving… ${fmtClock(elapsed)}`
     : demoRunning ? `Proving… ${fmtClock(elapsed)}`
       : done ? 'View portfolio'
-        : live ? (stage === 0 ? 'Lock collateral on Sepolia' : stage < 3 ? 'Proving…' : 'Back to portfolio') : 'Lock collateral & prove';
-  const disabled = busy || demoRunning || (live && stage > 0 && stage < 3);
+        : live ? (stage === 0 ? 'Lock collateral on Sepolia' : stage < 3 ? 'Continue proving' : 'Back to portfolio') : 'Lock collateral & prove';
+  const disabled = busy || demoRunning;
 
   return (
     <div>

@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { Contract, JsonRpcProvider, Wallet, getAddress } from 'ethers';
 import { lockerAbi, toxascoreAbi } from '../src/lib/abi.js';
 
@@ -16,8 +15,6 @@ import { lockerAbi, toxascoreAbi } from '../src/lib/abi.js';
  */
 
 const RELEASE_TTL_SECONDS = 30 * 60;
-
-const jobs = new Map();
 
 const env = (name, fallback = '') => process.env[name] || fallback;
 
@@ -101,27 +98,30 @@ export async function signRelease({ address, amount }) {
   };
 }
 
-export function startProof(txHash) {
-  const id = randomUUID();
-  jobs.set(id, { status: 'queued', detail: 'Queued' });
-  (async () => {
-    try {
-      if (!process.env.SEPOLIA_RPC_URL && sourceRpcUrl()) {
-        process.env.SEPOLIA_RPC_URL = sourceRpcUrl();
-      }
-      const { proveTx } = await import('./prove.js');
-      jobs.set(id, { status: 'running', detail: 'Starting proof pipeline' });
-      const proof = await proveTx(txHash, (status, detail) => jobs.set(id, { status, detail }));
-      jobs.set(id, { status: 'ready', proof });
-    } catch (err) {
-      jobs.set(id, { status: 'error', error: err.message || String(err) });
-    }
-  })();
-  return id;
+function ensureSepoliaRpc() {
+  if (!process.env.SEPOLIA_RPC_URL && sourceRpcUrl()) {
+    process.env.SEPOLIA_RPC_URL = sourceRpcUrl();
+  }
 }
 
-export function proofStatus(id) {
-  return jobs.get(id);
+/**
+ * Job id is the lock tx hash. Status is computed on every GET so Vercel
+ * serverless (no shared memory, no 15-minute lambda) can still prove.
+ */
+export function startProof(txHash) {
+  const hash = String(txHash || '');
+  if (!hash.startsWith('0x') || hash.length !== 66) {
+    throw Object.assign(new Error('txHash required'), { status: 400 });
+  }
+  return hash;
+}
+
+export async function proofStatus(id) {
+  const hash = String(id || '');
+  if (!hash.startsWith('0x') || hash.length !== 66) return undefined;
+  ensureSepoliaRpc();
+  const { proveSnapshot } = await import('./prove.js');
+  return proveSnapshot(hash);
 }
 
 export function health() {
@@ -195,9 +195,13 @@ export async function handleApiRequest(req, res) {
   }
 
   if (url.startsWith('/api/prove/') && req.method === 'GET') {
-    const job = proofStatus(url.slice('/api/prove/'.length));
-    if (!job) send(res, 404, { error: 'unknown job' });
-    else send(res, 200, job);
+    try {
+      const job = await proofStatus(url.slice('/api/prove/'.length));
+      if (!job) send(res, 404, { error: 'unknown job' });
+      else send(res, 200, job);
+    } catch (err) {
+      send(res, 500, { error: err.message || 'proof failed' });
+    }
     return true;
   }
 

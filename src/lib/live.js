@@ -108,6 +108,9 @@ export async function pollProofJob(id, onStatus) {
   while (Date.now() - started < 20 * 60 * 1000) {
     const res = await fetch(`${apiBase()}/api/prove/${id}`);
     const body = await res.json().catch(() => ({}));
+    if (!res.ok && !body.status) {
+      throw new Error(body.error || `Proof API error (${res.status}).`);
+    }
     if (body.status) onStatus?.(body.status, body.detail);
     if (body.status === 'ready') return body.proof;
     if (body.status === 'error') throw new Error(body.error || 'Proof generation failed');
@@ -179,6 +182,22 @@ export async function quoteLoan(address, amountEth) {
     fundable,
     pool: formatEther(pool),
   };
+}
+
+/** Most recent successful lock from this address, so a failed prove can resume without locking again. */
+export async function fetchLatestLockTx(address) {
+  if (!lockerAddress || !address) return '';
+  const client = sepoliaPublic();
+  const latest = await client.getBlockNumber();
+  const fromBlock = latest > 12_000n ? latest - 12_000n : 0n;
+  const logs = await client.getLogs({
+    address: lockerAddress,
+    event: lockerAbi.find((item) => item.type === 'event' && item.name === 'Locked'),
+    args: { user: address },
+    fromBlock,
+    toBlock: 'latest',
+  });
+  return logs.at(-1)?.transactionHash || '';
 }
 
 /** Sepolia-side collateral: what is escrowed and when the timelock frees it. */
