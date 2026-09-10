@@ -10,6 +10,13 @@ export const lockerAbi = [
     type: 'function',
     name: 'unlockETH',
     stateMutability: 'nonpayable',
+    inputs: [{ name: 'amount', type: 'uint256' }],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'unlockETH',
+    stateMutability: 'nonpayable',
     inputs: [
       { name: 'amount', type: 'uint256' },
       { name: 'deadline', type: 'uint256' },

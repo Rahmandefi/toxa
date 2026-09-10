@@ -12,7 +12,7 @@ import './styles.css';
 import { liveConfigured, explorerTx, CREDITCOIN_TESTNET_ID, SEPOLIA_ID } from './lib/chains.js';
 import {
   connectWallet, lockCollateral, startProofJob, pollProofJob, submitProof, fetchAccount, repayLoan,
-  quoteLoan, fetchCollateral, fetchLatestLockTx, unlockCollateral,
+  quoteLoan, fetchCollateral, unlockCollateral,
 } from './lib/live.js';
 
 /* ---------- constants ---------- */
@@ -34,6 +34,25 @@ const LOCK2_TX = '0x787ce03e577622fde1eef1bc060a0e6c0282ba95f5fac803dd1e0d952ba0
 const EXEC2_TX = '0x0d745dc6c8abf8bfba41c04a1aa9731daba731752d042ac6aac81bdef8c4affd';
 const PROVEN_BLOCK = 11640288;
 const DEMO_WAIT_MS = 2400;
+const PENDING_PROVE_KEY = 'toxa-prove-pending';
+
+function readPendingProve() {
+  try {
+    const raw = sessionStorage.getItem(PENDING_PROVE_KEY);
+    const pending = raw ? JSON.parse(raw) : null;
+    if (pending?.hash && /^0x[a-fA-F0-9]{64}$/.test(pending.hash) && pending.address) return pending;
+  } catch { /* private mode */ }
+  return null;
+}
+function writePendingProve(address, hash) {
+  try { sessionStorage.setItem(PENDING_PROVE_KEY, JSON.stringify({ address: String(address).toLowerCase(), hash })); } catch { /* private mode */ }
+}
+function clearPendingProve() {
+  try {
+    sessionStorage.removeItem(PENDING_PROVE_KEY);
+    sessionStorage.removeItem('toxa-lock-tx');
+  } catch { /* private mode */ }
+}
 
 const PIXEL_DELAYS = Array.from({ length: 9 }, (_, i) => {
   const r = Math.floor(i / 3);
@@ -375,31 +394,9 @@ function App() {
     const [acct, collateral] = await Promise.allSettled([fetchAccount(addr), fetchCollateral(addr)]);
     if (acct.status === 'fulfilled') setLiveAccount(acct.value);
     else setError(acct.reason?.message || String(acct.reason));
-    if (collateral.status === 'fulfilled') {
-      setLiveCollateral(collateral.value);
-      if (Number(collateral.value?.locked || 0) > 0) {
-        const hash = await fetchLatestLockTx(addr).catch(() => '');
-        if (hash) setLockTx((cur) => cur || hash);
-      }
-    }
+    if (collateral.status === 'fulfilled') setLiveCollateral(collateral.value);
   };
   useEffect(() => { if (live && account) refreshLive(account); }, [live, account]);
-
-  useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem('toxa-lock-tx');
-      if (saved && /^0x[a-fA-F0-9]{64}$/.test(saved)) setLockTx(saved);
-    } catch { /* private mode */ }
-  }, []);
-  useEffect(() => {
-    try {
-      if (lockTx && lockTx !== LOCK_TX) sessionStorage.setItem('toxa-lock-tx', lockTx);
-    } catch { /* private mode */ }
-  }, [lockTx]);
-  useEffect(() => {
-    if (!live || stage !== 0 || busy || !lockTx) return;
-    if (Number(liveCollateral?.locked || 0) > 0) setStage(1);
-  }, [live, liveCollateral, lockTx, stage, busy]);
 
   useEffect(() => {
     if (!live || !account || !liveConfigured || view !== 'borrow') { setLiveQuote(null); return undefined; }
@@ -448,6 +445,15 @@ function App() {
       const addr = await connectWallet();
       setAccount(addr);
       setMode('live');
+      const pending = readPendingProve();
+      if (!busy && pending && pending.address === addr.toLowerCase()) {
+        setLockTx(pending.hash);
+        setStage(1);
+      } else if (!busy) {
+        setLockTx('');
+        setStage(0);
+        setStatus('');
+      }
       pushActivity('Wallet connected', trunc(addr, 6));
       return addr; // the live-account read is handled by the [live, account] effect
     } catch (err) { setError(err.message); return null; }
@@ -455,7 +461,13 @@ function App() {
   };
 
   const resetDemo = () => { setDemoRunning(false); setDemoIdx(0); setDemoLog([]); setDemoDone(false); setStage(0); };
-  const begin = () => { setView('borrow'); resetDemo(); setError(''); setStatus(''); };
+  const begin = () => {
+    setView('borrow');
+    resetDemo();
+    setError('');
+    setStatus('');
+    if (live) { setLockTx(''); clearPendingProve(); }
+  };
   const startDemoRun = () => { setError(''); setDemoLog([]); setDemoIdx(0); setStage(0); setDemoDone(false); setDemoRunning(true); };
 
   const pushActivity = (label, detail) => setActivity((r) => [{ id: Date.now(), label, detail, time: 'Just now' }, ...r].slice(0, 8));
@@ -467,7 +479,7 @@ function App() {
     setStage(2); setStatus('Proof ready. Switch to Creditcoin Testnet and confirm loan issuance.');
     const issued = await submitProof(account, proof);
     setLoanTx(issued.hash); pushActivity('Proof verified', `Attestcoin execute · ${trunc(issued.hash)}`); setStage(3);
-    try { sessionStorage.removeItem('toxa-lock-tx'); } catch { /* private mode */ }
+    clearPendingProve();
     await refreshLive(account); pushActivity('Loan issued', `${liveAccount?.principal || ''} tCTC`); setStatus('Loan issued on Creditcoin.');
   };
 
@@ -493,7 +505,9 @@ function App() {
         }
         setStatus('Switch to Sepolia and confirm the lock transaction.');
         const result = await lockCollateral(account, amount);
-        setLockTx(result.hash); pushActivity('Collateral locked', `${amount} ETH · ${trunc(result.hash)}`); setStage(1);
+        setLockTx(result.hash);
+        writePendingProve(account, result.hash);
+        pushActivity('Collateral locked', `${amount} ETH · ${trunc(result.hash)}`); setStage(1);
         await proveAndIssue(result.hash);
         return;
       }
@@ -517,6 +531,9 @@ function App() {
     setBusy(true);
     try {
       const hash = await unlockCollateral(account, liveCollateral.locked);
+      clearPendingProve();
+      setLockTx('');
+      setStage(0);
       pushActivity('Collateral released', `${locked} ETH · ${trunc(hash)}`);
       setStatus('Collateral released on Sepolia.');
       await refreshLive(account);
@@ -653,12 +670,12 @@ function Overview({ score, loan, live, liveAccount, liveCollateral, begin, setVi
             <div className="lbl">Collateral escrow</div>
             <div className="kv">
               <div className="kv-row"><span className="k">LOCKED</span><span>{lockedEth.toFixed(4)} ETH</span></div>
-              <div className="kv-row"><span className="k">RELEASE</span><span className={canRelease ? 'pos' : 'dim'}>{canRelease ? '✓ VOUCHER READY' : (canRepay ? '☐ LOAN OPEN' : '☐ NOTHING LOCKED')}</span></div>
+              <div className="kv-row"><span className="k">RELEASE</span><span className={canRelease ? 'pos' : 'dim'}>{canRelease ? '✓ READY' : (canRepay ? '☐ LOAN OPEN' : '☐ NOTHING LOCKED')}</span></div>
             </div>
             <button className="btn outline block sm" style={{ marginTop: 12 }} onClick={onUnlock} disabled={!canRelease || busy}>
               {busy ? <CubeLoader label="Releasing" /> : (canRelease ? `Release ${lockedEth.toFixed(4)} ETH` : 'Release collateral')}
             </button>
-            <p className="note">The relayer signs a release only once Creditcoin shows nothing outstanding. If it ever goes quiet, <code>emergencyUnlock</code> returns your ETH 30 days after the lock.</p>
+            <p className="note">Release returns the escrowed ETH to this wallet. It stays disabled while a loan is open.</p>
           </div>
         )}
         <div className="card hover"><div className="lbl">Next unlock</div><p className="note">One repayment adds +{REPAY_SCORE_DELTA} points and 1.5 points of LTV. Proven behavior earns better terms.</p><button className="btn ghost block sm" style={{ marginTop: 14 }} onClick={() => setView('score')}>Score detail <ArrowUpRight className="arrow" size={14} /></button></div>

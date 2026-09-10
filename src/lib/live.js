@@ -184,20 +184,19 @@ export async function quoteLoan(address, amountEth) {
   };
 }
 
-/** Most recent successful lock from this address, so a failed prove can resume without locking again. */
-export async function fetchLatestLockTx(address) {
-  if (!lockerAddress || !address) return '';
-  const client = sepoliaPublic();
-  const latest = await client.getBlockNumber();
-  const fromBlock = latest > 12_000n ? latest - 12_000n : 0n;
-  const logs = await client.getLogs({
-    address: lockerAddress,
-    event: lockerAbi.find((item) => item.type === 'event' && item.name === 'Locked'),
-    args: { user: address },
-    fromBlock,
-    toBlock: 'latest',
-  });
-  return logs.at(-1)?.transactionHash || '';
+const ZERO = '0x0000000000000000000000000000000000000000';
+
+/** Live locker is the original unlockETH(uint256) build. Voucher releaser is optional. */
+export async function lockerHasReleaser() {
+  if (!lockerAddress) return false;
+  try {
+    const releaser = await sepoliaPublic().readContract({
+      address: lockerAddress, abi: lockerAbi, functionName: 'releaser',
+    });
+    return Boolean(releaser) && releaser !== ZERO;
+  } catch {
+    return false;
+  }
 }
 
 /** Sepolia-side collateral: what is escrowed and when the timelock frees it. */
@@ -235,15 +234,19 @@ export async function requestRelease(address, amountEth) {
 }
 
 export async function unlockCollateral(account, amountEth) {
-  const voucher = await requestRelease(account, amountEth);
   await ensureChain(sepolia);
-  const client = walletClient(sepolia);
-  const hash = await client.writeContract({
+  const amount = parseEther(String(amountEth));
+  let args = [amount];
+  if (await lockerHasReleaser()) {
+    const voucher = await requestRelease(account, amountEth);
+    args = [BigInt(voucher.amount), BigInt(voucher.deadline), voucher.signature];
+  }
+  const hash = await walletClient(sepolia).writeContract({
     account,
     address: lockerAddress,
     abi: lockerAbi,
     functionName: 'unlockETH',
-    args: [BigInt(voucher.amount), BigInt(voucher.deadline), voucher.signature],
+    args,
     chain: sepolia,
   });
   await sepoliaPublic().waitForTransactionReceipt({ hash });
